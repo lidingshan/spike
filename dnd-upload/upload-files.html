@@ -1,0 +1,80 @@
+<html>
+<head>
+<title>Upload file throug HTML5 drag and drop</title>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+
+<script>
+	var selectedFiles = new Array();
+	
+	function closeDefaultBehavior(e) {
+		var event = e.originalEvent;
+		event.preventDefault();
+	}
+	
+	function dropHandler(e) {
+		var event = e.originalEvent;
+		
+		event.preventDefault();
+		var dt = event.dataTransfer;		
+
+		addFileNameToDiv(dt.files);
+	}
+	
+	function addFileNameToDiv(files) {
+		for(var i = 0; i < files.length; i++) {	
+			var file = files[i];
+			selectedFiles.push(file);
+			
+			var span = document.createElement("span");
+			span.innerHTML = file.name + "<br/>";			
+			document.getElementById("container").appendChild(span);
+		}	
+	}
+	
+	function upload() {
+		var formData = new FormData();
+		for(var i = 0; i < selectedFiles.length; i++) {
+			var file = selectedFiles[i];
+			formData.append(file.name, file);
+		}
+		
+		var xhr = new XMLHttpRequest();
+		xhr.upload.addEventListener("progress", uploadProgress, false);		
+		xhr.open('POST', 'http://localhost:3000/upload', true);
+		xhr.send(formData);
+	}
+	
+	function uploadProgress(event) {
+		var progressBar = document.getElementById('prog');
+		if (event.lengthComputable) {
+		  progressBar.value = (event.loaded / event.total) * 100;
+		//  progressBar.textContent = progressBar.value; // Fallback for unsupported browsers.
+		}
+	}	
+	
+	function uploadCompleted(event) {
+		alert("Done");
+	}
+
+	$(document).ready(function() {
+		$('#bthUpload').on('click', upload);
+		$('#pic').on('change', function() {
+			var files = this.files;
+			addFileNameToDiv(files);
+		});
+		
+		$('#container').on('dragenter', closeDefaultBehavior);
+		$('#container').on('dragover', closeDefaultBehavior);
+		$('#container').on('drop', dropHandler);
+	});
+</script>
+
+</head>
+<body>
+	<input type="file" name="pic" id="pic" multiple="true" /> 
+	<input id="bthUpload" type="button" name="Upload" value="Upload"/>
+	<progress id="prog" min="0" max="100" value="0"></progress>
+	
+	<div id="container" style="width:500;height:500;border:solid"></div>	
+</body>
+</html>
